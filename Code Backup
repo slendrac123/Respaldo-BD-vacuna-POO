@@ -1,24 +1,24 @@
-import sqlite3
+import sqlite3 #Libreria sqlite3 esta incluida por defecto, permite elaborar y manipular bases de datos
 from sqlite3 import Error
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+import smtplib #Libreria smtplib esta incluida por defecto, permite la creación y envio de correos electronicos
+from email.mime.multipart import MIMEMultipart #Libreria incluida por defecto, MIMEMultipart con el fin de organizar los datos relacionados a la aplicación de correos electronicos (remitente y destinatario)
+from email.mime.text import MIMEText #Libreria incluida por defecto, se importa MIMEText para permitir la redacción del mensaje a enviar por correo electronico
 # from datetime import datetime, date, time, timezone
-import datetime
-from PIL import Image
+import datetime #Libreria datetime esta incluida por defecto, permite la correcta elaboración para foematos de fecha
+from PIL import Image #Libreria PIL esta incluida por defecto, importa el metodo Image con el fin de producir una imagen
 
 ## TODO comments
 
-def sqlConnection():
+def sqlConnection(): #Función que da conexión a la base de datos mencionada (Vacunacion.db) creada con sqlite3 utilizando el parametro creado (con), por el metodo sqlite3.connect()
     try:
         con = sqlite3.connect('./Vacunacion.db')
         return con
     except Error:
         print(Error)
 
-def crearTablas():
+def crearTablas(): #Esta función creara las tablas mencionadas si estas no se encuentran dentro de la base de datos con el metodo .execute que permite la manipulación de la imformación de la base de datos
     con = sqlConnection()
-    cursorObj = con.cursor()
+    cursorObj = con.cursor()  #Se crea metodo .cursor() para traer y ejecutar declaraciónes
     # cursorObj.execute('''DROP TABLE pacientes''')
     cursorObj.execute('''
                 CREATE TABLE if not exists "pacientes" (
@@ -54,7 +54,6 @@ def crearTablas():
                     PRIMARY KEY("noLote")
                 );
                 ''')
-    cursorObj.execute('update lote_vacunas set cantidadAsignada = cantidadUsada')
     # cursorObj.execute('''DROP TABLE plan_vacunacion''')
     cursorObj.execute('''
                 CREATE TABLE if not exists "plan_vacunacion" (
@@ -66,7 +65,7 @@ def crearTablas():
                     PRIMARY KEY("idPlan")
                 );
                 ''')
-    cursorObj.execute('''DROP TABLE programacion_vacunas''')
+    # cursorObj.execute('''DROP TABLE programacion_vacunas''')
     cursorObj.execute('''
                 CREATE TABLE if not exists "programacion_vacunas" (
                     idCita      INTEGER,
@@ -87,16 +86,12 @@ def crearTablas():
                     "noId"	ASC
                 );
                 ''')
-    cursorObj.execute('''
-                SELECT * FROM programacion_vacunas C 
-                inner join pacientes P on (C.noId = P.noId);
-                ''')
-    con.commit()
-    con.close()
+    con.commit() #Se usa el metodo .commit() para afirmar los cambios realizados dento de la base de datos
+    con.close()  #Se cierra la base de datos por el metodo .close()
 
-def menuModuloUno():
+def menuModuloUno(): #Función para mostrar opciones relacionadas a la tabla (usuarios)
     while True:
-        opcion = input('Ingrese el numero de la opcion que desea realizar:\n1. Crear nuevo afiliado\n2. Consultar afiliado\n3. Desafiliar usuario\n4. Salir\n')
+        opcion = input('Ingrese el numero de la opcion que desea realizar:\n1. Crear nuevo afiliado\n2. Consultar afiliado\n3. Desafiliar usuario\n4. Atras\n')
         if opcion != '': 
             opcion = int(opcion)
             if (opcion == 1): crearUsuario()
@@ -105,54 +100,56 @@ def menuModuloUno():
             if (opcion == 4): break
         else: continue
 
-def crearUsuario():
+def crearUsuario(): #Función para crear y almacenar una serie de datos dentro de la tabla usuarios
     con = sqlConnection() 
     cursorObj = con.cursor()
     print('Ingrese a continuacion los datos de la persona que desea registrar:')
-    documentoID = int(input('Documento de Identidad:\n'))
-    cursorObj.execute('SELECT * FROM pacientes WHERE noId = {}'.format(documentoID))
-    resultado = cursorObj.fetchall()
+    documentoID = int(input('Documento de Identidad:\n')) #se crea variable (documentoID) contenedora del numero de documento de identidad del usuario
+    cursorObj.execute('SELECT * FROM pacientes WHERE noId = {}'.format(documentoID)) #se toma la variable (documentoID) como el indicador noId de la tabla pacientes por el metodo SELECT
+    resultado = cursorObj.fetchall() # se usa el método fetchall() del objeto cursor para almacenar los valores en la variable (resultado).
     if len(resultado) == 0:
-        nombre = input('Nombre:\n').title()
-        apellido = input('Apellido:\n').title()
-        direccion = input('Direccion:\n').title()
-        telefono = int(input('Telefono:\n'))
-        correo = input('Correo:\n')
-        ciudad = input('Ciudad:\n').title()
+        #Se crean variables con los datos recividos del usuario
+        nombre = input('Nombre:\n').title()  
+        apellido = input('Apellido:\n').title() 
+        direccion = input('Direccion:\n').title() 
+        telefono = int(input('Telefono:\n')) 
+        correo = input('Correo:\n') 
+        ciudad = input('Ciudad:\n').title() 
         print('Fecha de nacimiento:')
-        diaNacimiento = input("Dia: ")
+        diaNacimiento = input("Dia: ") #se crean variables (diaNacimiento, mesNacimiento y añoNacimiento) que contienen los numero de dia, mes y fecha de nacimiento respectivamente con la cantidad de digitos marcada usando el metodo .ljust() 
         diaNacimiento = diaNacimiento.ljust(2)
         mesNacimiento = input("Mes: ")
         mesNacimiento = mesNacimiento.ljust(2)
         añoNacimiento = input("Año: ")
         añoNacimiento = añoNacimiento.ljust(4)
-        fechaNacimiento = "{}-{}-{}".format(añoNacimiento,mesNacimiento,diaNacimiento)
+        fechaNacimiento = "{}-{}-{}".format(añoNacimiento,mesNacimiento,diaNacimiento) #Se juntan y almacenan los valores anteriores pertenecientes a la fecha de nacimiento del usuario en la variable (fechaNacimiento) con el metodo .format()
         print('Fecha de afiliacion:')
-        diaAfiliacion = input("Dia: ")
+        diaAfiliacion = input("Dia: ") #se crean variables (diaAfiliacion, mesAfiliacion y añoAfiliacion) pertenecientes a la fecha de afiliación del usuario
         diaAfiliacion = diaAfiliacion.ljust(2)
         mesAfiliacion = input("Mes: ")
         mesAfiliacion = mesAfiliacion.ljust(2)
         añoAfiliacion = input("Año: ")
         añoAfiliacion = añoAfiliacion.ljust(4)
-        fechaAfiliacion = "{}-{}-{}".format(añoAfiliacion,mesAfiliacion,diaAfiliacion)
-        vacunado = input('¿Ha sido vacunado? (S/N):\n').title()
+        fechaAfiliacion = "{}-{}-{}".format(añoAfiliacion,mesAfiliacion,diaAfiliacion) #Se juntan y almacenan los valores pertenecientes a la fecha de afiliación del usuario en la variable (fechaAfiliacion)
+        vacunado = input('¿Ha sido vacunado? (S/N):\n').title() #Se crea variable (vacunado) que identifica si el usuario esta vacunado o no, ("S" vacunado) o ("N" no vacunado)
+        # Se almacenan los datos de usuario recogidos dentro de la tabla pacientes por el metodo INSERT INTO
         cursorObj.execute('INSERT INTO pacientes VALUES ({a},"{b}","{c}","{d}",{e},"{f}","{g}",date("{h}"),date("{i}"),"{j}", NULL)'.format(a=documentoID, b=nombre, c=apellido, d=direccion, e=telefono, f=correo, g=ciudad, h =fechaNacimiento, i=fechaAfiliacion, j=vacunado))
         con.commit()
     else:
-        print('Este usuario ya existe\n')
+        print('Este usuario ya existe\n') #Se mostrara el mensaje si la variable (resultado) es diferente de 0, en caso de que ya hubieran datos almacenados en la variable noId digitada por el usuario
     
     con.close()
 
-def consultarUsuario():
+def consultarUsuario(): #Función para traer y mostrar datos de un paciente registrado 
     con = sqlConnection()
     cursorObj = con.cursor()
-    documentoID = int(input('Ingrese a continuacion el documento de identidad de la persona que desea consultar:\n'))
-    cursorObj.execute('SELECT * FROM pacientes WHERE noId = {}'.format(documentoID))
-    resultado = cursorObj.fetchall()
+    documentoID = int(input('Ingrese a continuacion el documento de identidad de la persona que desea consultar:\n')) #se pide el documento de identidad del paciente a buscar
+    cursorObj.execute('SELECT * FROM pacientes WHERE noId = {}'.format(documentoID)) #se busca dentro de la tabla pacientes el valor (noId) que corresponda con la variable(documentoID)
+    resultado = cursorObj.fetchone() #se asigna el resultado de la busqueda individual a la variable (resultado) con el metodo .fethcone
     print('\n')
-    if len(resultado) != 0:
+    if resultado != None:
         cont = 0
-        for datos in resultado[0]:
+        for datos in resultado: #Ciclo que recorre los valores almacenados en (resultado) nombrados como (datos) 
             infoUsuario = ""
             if cont == 0: infoUsuario = "No. Identificación: "
             elif cont == 1: infoUsuario = "Nombre: "
@@ -165,21 +162,21 @@ def consultarUsuario():
             elif cont == 8: infoUsuario = "Fecha de afiliacion: "
             elif cont == 9: infoUsuario = "¿Vacunado?: "
             else: infoUsuario = "Fecha de desafiliación: "
-            if datos != None:
-                print(infoUsuario,datos)
-                cont += 1
+            #Se da una cadena para (infoUsuario) y se imprime junto al dato correspondiente
+            print(infoUsuario,datos)
+            cont += 1
         print('\n')
-    else: print('El paciente no se encuentra en los registros.\n')
-
+    else: print('El paciente no se encuentra en los registros.\n') #Se mostrara el mensaje si la variable (resultado) esta vacia, en caso de que no hallan datos almacenados en la variable noId digitada por el usuario
+    #se cierra la table
     con.close()
 
-def desafiliarUsuario():
+def desafiliarUsuario(): # Función para desafiliar a un paciente registrado con anterioridad
     con = sqlConnection()
     cursorObj = con.cursor()
-    documentoID = int(input('Ingrese a continuacion el documento de identidad de la persona que desea desafiliar:\n'))
-    cursorObj.execute('SELECT * FROM pacientes WHERE noId = {}'.format(documentoID))
+    documentoID = int(input('Ingrese a continuacion el documento de identidad de la persona que desea desafiliar:\n')) # se pide el documento de idetidad del usuario a desafiliar
+    cursorObj.execute('SELECT * FROM pacientes WHERE noId = {}'.format(documentoID)) #se busca dentro de la tabla pacientes el valor (noId) que corresponda con la variable(documentoID)
     resultado = cursorObj.fetchall()
-    if len(resultado) != 0:
+    if len(resultado) != 0: #Si el usuario se encuentra registrado en la tabla pacientes se procede a crear una fecha de desafiliación
         print('Fecha de desafiliacion:')
         diaDesafiliacion = input("Dia: ")
         diaDesafiliacion = diaDesafiliacion.ljust(2)
@@ -188,30 +185,31 @@ def desafiliarUsuario():
         añoDesafiliacion = input("Año: ")
         añoDesafiliacion = añoDesafiliacion.ljust(4)
         fechaDesafiliacion = "{}-{}-{}".format(añoDesafiliacion,mesDesafiliacion,diaDesafiliacion)
-        cursorObj.execute('UPDATE pacientes SET fechaDesafiliacion = date("{}") WHERE noID = {}'.format(fechaDesafiliacion, documentoID))
-        con.commit()
-    else: print('El paciente no se encuentra en los registros.')
-
+        cursorObj.execute('UPDATE pacientes SET fechaDesafiliacion = date("{}") WHERE noID = {}'.format(fechaDesafiliacion, documentoID)) #se actualia la variable (fechaDesafiliacion) de la tabla paciente cuando noID = documentoID por el metodo .UPDATE 
+        con.commit() #Se afirman los cambios realizados
+    else: print('El paciente no se encuentra en los registros.') #Se mostrara el mensaje si la variable (resultado) es igual a 0, en caso de que no hallan datos almacenados en la variable noId digitada por el usuario
+    #Se cierra la tabla
     con.close()
 
-def menuModuloDos():
-    while True:
-        opcion = input('Ingrese el numero de la opcion que desea realizar:\n1. Crear nuevo lote de vacunas\n2. Consultar lote de vacunas\n3. Salir\n')
+def menuModuloDos(): #Función de menú para las opciones crearLote() y consultarLote()
+    while True: #se crea un ciclo que finaliza unicamente cuando el usuario elige la opcion (3. Atras)
+        opcion = input('Ingrese el numero de la opcion que desea realizar:\n1. Crear nuevo lote de vacunas\n2. Consultar lote de vacunas\n3. Atras\n')
         if opcion != '': 
             opcion = int(opcion)
-            if (opcion == 1): crearLote()
-            if (opcion == 2): consultarLote()
+            if (opcion == 1): crearLote() #Trae la función (crearLote)
+            if (opcion == 2): consultarLote() #Trae la función (consultarLote)
             if (opcion == 3): break
-        else: continue
+        else: continue #El programa dara otra vuelta en caso de que la variable (opcion) este vacia
 
-def crearLote():
+def crearLote(): #Función para crear un nuevo lote dentro de la tabla lote_vacunas
     con = sqlConnection() 
     cursorObj = con.cursor()
     print('Ingrese a continuacion los datos del lote que desea registrar:')
-    numeroLote = int(input('Numero del lote:\n'))
-    cursorObj.execute('SELECT * FROM lote_vacunas WHERE noLote = {}'.format(numeroLote))
-    resultado = cursorObj.fetchall()
+    numeroLote = int(input('Numero del lote:\n')) #se asigna un numero identificador para el nuevo lote que se desea ingresar
+    cursorObj.execute('SELECT * FROM lote_vacunas WHERE noLote = {}'.format(numeroLote)) #el numero identificador se compara con los existentes en la tabla lote_vacuna
+    resultado = cursorObj.fetchall() #se obtienen los valores correspondientes con el numero identificador y se almacenan en la variable (resultado)
     if len(resultado) == 0:
+        #Se ingresan datos respectivos al nuevo lote
         fabricante = input('Fabricante:\n').title()
         tipoVacuna = input('Tipo de vacuna:\n').title()
         cantidadRecibida = int(input('Cantidad de vacunas recibidas:\n'))
@@ -229,43 +227,73 @@ def crearLote():
         añoVencimiento = input("Año: ")
         añoVencimiento = añoVencimiento.ljust(4)
         fechaVencimiento = "{}-{}-{}".format(añoVencimiento,mesVencimiento,diaVencimiento)
+        # se da la opcion para ingresar una imagen del lote segun su ruta
         rutaImagen = input('Ruta completa a la imagen:\n')
-        with open(rutaImagen, "rb") as File:
+        with open(rutaImagen, "rb") as File: # se abre el archivo respectivo y se lee, almacenandose en la variable (imagenBinaria)
             imagenBinaria = File.read()
         info = (numeroLote, fabricante, tipoVacuna, cantidadRecibida, cantidadAsignada, cantidadUsada, dosisNecesaria, temperatura, efectividad, tiempoProteccion, fechaVencimiento, imagenBinaria)
-        cursorObj.execute('INSERT INTO lote_vacunas VALUES (?,?,?,?,?,?,?,?,?,?,date(?),?)', info)
+        cursorObj.execute('INSERT INTO lote_vacunas VALUES (?,?,?,?,?,?,?,?,?,?,date(?),?)', info) #Se incertan los datos de (info) dentro de la tabla lote_vacunas por el metodo INSERT INTO, tenuendo en cuenta que el penultimo valor entra con un formato de fecha con el metodo date()
         con.commit()
     else:
-        print('Este lote de vacunas ya existe\n')
+        print('Este lote de vacunas ya existe\n') #se mostrara un mensaje si el numero identificador digitado ya existe dentro de la tabla lote_vacuna
     
     con.close()
 
-def consultarLote():
+def consultarLote(): # Función con la finalidad de consultar un lote de vacunas ingresado con anterioridad
     con = sqlConnection()
     cursorObj = con.cursor()
     noLote = int(input('Ingrese a continuacion numero de lote que desea consultar:\n'))
-    cursorObj.execute('SELECT * FROM lote_vacunas WHERE noLote = {}'.format(noLote))
-    resultado = cursorObj.fetchone()
+    cursorObj.execute('SELECT * FROM lote_vacunas WHERE noLote = {}'.format(noLote)) # se toma (noLote) como variable de busqueda 
+    resultado = cursorObj.fetchone() # Se trae el valor individual de la tabla lote_vacunas que concuerda con (noLote)
     print('\n')
-    if len(resultado) != 0:
+    if resultado != None:
+        cont = 0
+        #Se realiza un bucle que recorre los datos de la variable (resultado) si esta tiene un valor no nulo
         for datos in resultado[0:-1]:
-            if datos != '': print(datos)
-        mostrarImagen(cursorObj, resultado[1], resultado[11])
+            infoLote = ""
+            if cont == 0: infoLote = "No. de Lote: "
+            elif cont == 1: infoLote = "Fabricante: "
+            elif cont == 2: infoLote = "Tipo de vacuna: "
+            elif cont == 3: infoLote = "Cantidad de vacunas recibidas: "
+            elif cont == 4: infoLote = "Cantidad de asignadas recibidas: "
+            elif cont == 5: infoLote = "Cantidad de usadas recibidas: "
+            elif cont == 6: infoLote = "Dosis necesarias: "
+            elif cont == 7: infoLote = "Temperatura de almacenamiento: "
+            elif cont == 8: infoLote = "Efectividad: "
+            elif cont == 9: infoLote = "Tiempo de proteccion: "
+            elif cont == 10: infoLote = "Fecha de vencimiento: "
+            if datos != None:
+                print(infoLote,datos) # Se imprime (infoLote) correspondiente a la descripción de la información junto con el valor correspondiente (datos)
+                cont += 1
+        mostrarImagen(cursorObj, resultado[1], resultado[11]) #se muestra una imagen recogiendo los datos de fabricante, imagemBinaria de la tabla lote_vacunas y la variable (cursorObj)
         print('\n')
-    else: print('El lote no se encuentra registrado.\n')
+    else: print('El lote no se encuentra registrado.\n') #Se mostrará un mensaje si el valor de (noLote) es nulo
 
     con.close()
 
-def mostrarImagen(cursorObj, fabricante, imagenBinaria):
-    rutaDeGuardado = '/home/alpha23/Downloads/{}.jpg'.format(fabricante)
-    with open(rutaDeGuardado, "wb") as File:
-        File.write(imagenBinaria)
-    imagen = Image.open(rutaDeGuardado)
-    imagen.show()
-
-def menuModuloTres():
+def mostrarImagen(cursorObj, fabricante, imagenBinaria): # Función para visualizar una imagen, recoge (cursorObj) de la función .cursor(), (fabricante) y (imagenBinaria) información almacenada en la tabla lote_vacunas
+    #Se crea un ciclo que solo se cierra cuando el usuario halla terminado de visualizar una imagen o hasta que la variable (opcion) sea 2
     while True:
-        opcion = input('Ingrese el numero de la opcion que desea realizar:\n1. Crear plan de vacunación\n2. Consultar plan de vacunación\n3. Salir\n')
+        opcion = input('¿Desea abrir la imagen?:\n1. Si\n2. No\n')
+        if opcion != '': 
+            opcion = int(opcion)
+            if (opcion == 1): 
+                rutaDeGuardado = 'imagenesDescargadas/{}.jpg'.format(fabricante) #Se toma la información de la ruta en donde se encuentra la imagen
+                with open(rutaDeGuardado, "wb") as File:
+                    File.write(imagenBinaria)
+                #Se abre la imagen abriendo su ruta almacenada en (rutaDeGuardado) con el metodo .open() y se visualiza con el metodo .show()
+                imagen = Image.open(rutaDeGuardado)
+                imagen.show() 
+            break
+            if (opcion == 2): 
+                break #termina la función
+            else: continue
+        else: continue
+
+def menuModuloTres(): #Función para mostrar un menú de opciones relacionados a los planes de vacunación
+    #se crea un bucle que solo se detiene cuando la variable (opcion) sea igual a 3
+    while True:
+        opcion = input('Ingrese el numero de la opcion que desea realizar:\n1. Crear plan de vacunación\n2. Consultar plan de vacunación\n3. Atras\n')
         if opcion != '': 
             opcion = int(opcion)
             if (opcion == 1): crearPlanVacunacion()
@@ -273,14 +301,15 @@ def menuModuloTres():
             if (opcion == 3): break
         else: continue
 
-def crearPlanVacunacion():
+def crearPlanVacunacion(): #Función para crear un nuevo plan de vacunación
     con = sqlConnection() 
     cursorObj = con.cursor()
     print('Ingrese a continuacion los datos del plan de vacunación que desea crear:')
     idPlan = int(input('Codigo del plan:\n'))
-    cursorObj.execute('SELECT * FROM plan_vacunacion WHERE idPlan = {}'.format(idPlan))
-    resultado = cursorObj.fetchall()
+    cursorObj.execute('SELECT * FROM plan_vacunacion WHERE idPlan = {}'.format(idPlan)) #se selecciona un valor para (idPlan) y se busca dentro de la tabla plan_vacunacion
+    resultado = cursorObj.fetchall() #se toman los valores de la tabla con un (idPlan) igual al ingresado
     if len(resultado) == 0:
+        #Se toman del usuario los valores correspondientes
         edadMinima = int(input('Edad minima requerida:\n'))
         edadMaxima = int(input('Edad maxima requerida:\n'))
         print('Fecha de inicio:')
@@ -299,57 +328,99 @@ def crearPlanVacunacion():
         añoFinal = input("Año: ")
         añoFinal = añoFinal.ljust(4)
         fechaFinal = "{}-{}-{}".format(añoFinal,mesFinal,diaFinal)
+        #los valores tomados se insertan en la tabla plan_vacunacion por el metodo INSERT INTO
         cursorObj.execute('INSERT INTO plan_vacunacion VALUES ({a},{b},{c},date("{d}"),date("{e}"))'.format(a=idPlan, b=edadMinima, c=edadMaxima, d=fechaInicio, e=fechaFinal))
         con.commit()
     else:
-        print('Este plan de vacunacion ya existe\n')
+        print('Este plan de vacunacion ya existe\n') #Se mostrará un mensaje si el (idPlan) ingresado ya ha sido ingresado con anterioridad
     
     con.close()
 
-def consultarPlanVacunacion():
+def consultarPlanVacunacion(): #Función para ver los datos de un plan de vacunación ya existente en la tabla plan_vacunacion
     con = sqlConnection()
     cursorObj = con.cursor()
     idPlan = int(input('Ingrese a continuacion el codigo del plan de vacunacion que desea consultar:\n'))
     cursorObj.execute('SELECT * FROM plan_vacunacion WHERE idPlan = {}'.format(idPlan))
-    resultado = cursorObj.fetchall()
+    resultado = cursorObj.fetchone() #se toma un valor correspondiente con el (idPlan) ingresado
     print('\n')
-    if len(resultado) != 0:
-        for datos in resultado[0]:
-            if datos != '': print(datos)
+    if resultado != None: #si el valor obtenido de (resultado) no es nulo, proseguira
+        cont = 0
+        #se genera un bucle que recorre los datos en (resultado) mientras se le asigna un nombre a la variable (infoLote) segun un contador (cont) que crece con cada vuelta
+        for datos in resultado:
+            infoLote = ""
+            if cont == 0: infoLote = "Id. de Plan: "
+            elif cont == 1: infoLote = "Edad minima: "
+            elif cont == 2: infoLote = "Edad maxima: "
+            elif cont == 3: infoLote = "Fecha de inicio: "
+            elif cont == 4: infoLote = "Fecha de finalizacion: "
+            if datos != None:
+                # se imprimen los actuales valores de (infoLote): descripción de la información y (datos): el valor correspondiente 
+                print(infoLote,datos)
+                cont += 1
         print('\n')
-    else: print('El plan de vacunación no se encuentra registrado.\n')
+    else: print('El plan de vacunación no se encuentra registrado.\n') #se mostrara un mensaje si (resultado) es nulo
+    #se cierra tabla
+    con.close()
+
+def menuModuloCuatro(): #Función que genera un menú para las opciones relacionadas a las programaciones de vacunación
+    # Se genera un bucle que solo se detiene cunado (opcion) sea igual a 4
+    while True:
+        opcion = input('Ingrese el numero de la opcion que desea realizar:\n1. Crear la programacion de vacunas\n2. Consultar la programacion de vacunas\n3. Consultar vacunacion de un paciente\n4. Atras\n')
+        if opcion != '': 
+            opcion = int(opcion)
+            if (opcion == 1): programacionDeVacunacion() # Si (opcion) es igual a 1, se inicia la función programacionDeVacunacion()
+            elif (opcion == 2): 
+                # se inicia un bucle para obtener un dato de consulta según lo elija el usuario, este bucle solo se detendrá cuando (opcion) sea 11
+                while True:
+                    opcion = input('''Por que campo desea organizar la consulta:\n1. Numero de Identificacion\n2. Nombre\n3. Apellido\n4. Direccion\n5. Telefono\n6. Correo\n7. Fecha Programada\n8. Hora Programada\n9. Numero de lote\n10. Fabricante\n11. Salir de la consulta''')
+                    if opcion != '': 
+                        opcion = int(opcion)
+                        #Se realiza una selección para organizar la consulta segun (opcion) digitada por el usuario
+                        if (opcion ==1): datoConsulta = 'pc.noId'
+                        elif (opcion ==2): datoConsulta = 'pc.nombre'
+                        elif (opcion ==3): datoConsulta = 'pc.apellido'
+                        elif (opcion ==4): datoConsulta = 'pc.direccion'
+                        elif (opcion ==5): datoConsulta = 'pc.telefono'
+                        elif (opcion ==6): datoConsulta = 'pc.correo'
+                        elif (opcion ==7): datoConsulta = 'pgv.fechaProgramada'
+                        elif (opcion ==8): datoConsulta = 'pgv.horaProgramada'
+                        elif (opcion ==9): datoConsulta = 'lv.noLote'
+                        elif (opcion ==10): datoConsulta = 'lv.fabricante'
+                        else: break
+                    else: continue
+                    #Se llama a la función consultarProgramacionCompleta() con la entrada (datoConsulta)
+                    consultarProgramacionCompleta(datoConsulta)
+            elif (opcion == 3): consultarProgramacionIndividual() # Si (opcion) es igual a 3, se inicia la función consultarProgramacionIndividual()
+            elif (opcion == 4): break # el programa deja el bucle por medio de la función break
+        else: continue 
+
+def programacionDeVacunacion(): #Función para programar vacunación
+    con = sqlConnection() 
+    cursorObj = con.cursor()
+    cursorObj.execute('UPDATE lote_vacunas SET cantidadAsignada = cantidadUsada') # se actualiza la tabla lote_vacunas de manera que cantidadAsignada tenga el valor de cantidadUsada con el metodo UPDATE
+    cursorObj.execute('DROP TABLE programacion_vacunas') #se remueve la tabla programacion_vacunas de la base de datos
+    con.commit() 
+    programacionPacienteLote(con) #Se llama a la función programacionPacienteLote(con)
+    programacionFechaHora(con) #Se llama a la función programacionFechaHora(con)
 
     con.close()
 
-def menuModuloCuatro():
-    while True:
-        opcion = input('¿Desea crear la programacion de vacunacion?:\n1. Si\n2. No\n')
-        if opcion != '': 
-            opcion = int(opcion)
-            if (opcion == 1): 
-                programacionDeVacunacion()
-                break
-            if (opcion == 2): break
-        else: continue
-
-def programacionDeVacunacion():
-    programacionPacienteLote()
-    programacionFechaHora()
-
-def programacionPacienteLote():
-    con = sqlConnection() 
+def programacionPacienteLote(con): #función para programar vacunación de paciente según el lote, recive la la funcion con
     cursorObj = con.cursor()
     crearTablas()
-    cursorObj.execute('SELECT * FROM plan_vacunacion')
+    cursorObj.execute('SELECT * FROM plan_vacunacion') # se toman los datos almacenados de la tabla plan_vacunacion 
     planVacunacion = cursorObj.fetchall()
+    # se crea un bucle que recorre los datos en (planVacunacion)
     for plan in planVacunacion:
-        # print(plan)
+        # Se toman datos de la tabla paciente según un rango de edad tomado de los valores de (planVacunacion)
         cursorObj.execute('SELECT noId, ciudad, CAST((julianday("now") - julianday(fechaNacimiento))/365.25 as INTEGER) as Edad FROM pacientes WHERE (Edad >= {}) AND (Edad <= {}) AND vacunado = "N" AND fechaDesafiliacion is Null'.format(plan[1], plan[2])) 
         pacientesAVacunar = cursorObj.fetchall()
+        #Se hace un bucle que recorre los valores de (pacientesAVacunar)
         for paciente in pacientesAVacunar:
-            # print(paciente)
+            #Se toman los valores de cantidadAsignada y cantidadRecibida de la tabla lote_vacunas y se busca un valor en donde cantidadAsignada < cantidadRecibida
             cursorObj.execute('SELECT noLote FROM lote_vacunas WHERE cantidadAsignada<cantidadRecibida')
             vacunaAAaplicar = cursorObj.fetchone()
+            #En caso de que no se encuentre un valor tal que cantidadAsignada < cantidadRecibida, vacunaAAaplicar estara vacio
             if vacunaAAaplicar == None:
                 print('Limite de vacunas alcanzado')
                 return
@@ -358,10 +429,7 @@ def programacionPacienteLote():
             cursorObj.execute('UPDATE lote_vacunas SET cantidadAsignada = cantidadAsignada+1 WHERE noLote = {}'.format(vacunaAAaplicar[0]))
             con.commit()
 
-    con.close()
-
-def programacionFechaHora():
-    con = sqlConnection() 
+def programacionFechaHora(con): #Función para programar una fecha y hora de vacunación
     cursorObj = con.cursor()
     horaInicio = "08:00:00"
     horaFin = "17:00:00"
@@ -370,13 +438,13 @@ def programacionFechaHora():
                         INNER JOIN pacientes pc ON (pc.noid = pgv.noid) 
                         INNER JOIN lote_vacunas lv ON (lv.noLote = pgv.noLote) 
                         WHERE fechaProgramada IS NULL''')
-    personasAVacunar = cursorObj.fetchall()
-    for persona in personasAVacunar:
+    citaAProgramar = cursorObj.fetchall()
+    for cita in citaAProgramar:
         cursorObj.execute('SELECT fechaProgramada, max(horaProgramada) FROM programacion_vacunas WHERE fechaProgramada = (SELECT max(fechaProgramada) FROM programacion_vacunas)')
         ultimaCitaProgramada =  cursorObj.fetchone()
         # print(ultimaCitaProgramada)
         if ultimaCitaProgramada[0] == None:
-            fechaCita = persona[7]
+            fechaCita = cita[7]
             horaCita = horaInicio
         else:
             fechaMaxima = ultimaCitaProgramada[0]
@@ -395,18 +463,16 @@ def programacionFechaHora():
                 fechaCita = fechaMaxima
 
             fechaCitaDt = datetime.datetime.strptime(fechaCita, "%Y-%m-%d")
-            fechaInicioDt = datetime.datetime.strptime(persona[7], "%Y-%m-%d")
+            fechaInicioDt = datetime.datetime.strptime(cita[7], "%Y-%m-%d")
             if fechaCitaDt < fechaInicioDt:
                 fechaCita = fechaInicioDt.strftime("%Y-%m-%d")
                 horaCita = horaInicio
-        cursorObj.execute('update programacion_vacunas set fechaProgramada = ?, horaProgramada = ? where idCita = ?', (fechaCita, horaCita, persona[0]))
+        cursorObj.execute('update programacion_vacunas set fechaProgramada = ?, horaProgramada = ? where idCita = ?', (fechaCita, horaCita, cita[0]))
         con.commit()
-        # enviarCorreo(persona[8], fechaCita, horaCita, persona[9])
-
-    con.close()
+        # enviarCorreo(cita[8], fechaCita, horaCita, cita[9])
     print('Programacion de citas de vacunacion exitosa')
 
-def enviarCorreo(destinatario, dia, hora, vacuna):
+def enviarCorreo(destinatario, dia, hora, vacuna): #Función para enviar un correo electronico prediseñado, toma las variables (destinatario), (dia), (hora), (vacuna)
     mensajeObj = MIMEMultipart()
     mensaje = '''Cordial saludo.
     Le notificamos que su cita de vacunacion esta programada para el dia {} a las {}. Le sera aplicada la vacuna {}.'''
@@ -426,7 +492,69 @@ def enviarCorreo(destinatario, dia, hora, vacuna):
     except:
         print('error')
 
-def menuModuloCinco():
+def consultarProgramacionCompleta(datoConsulta): #Función para hacer una programación de vacunación a todos los usuarios de un plan de vacunación 
+    con = sqlConnection()
+    cursorObj = con.cursor()
+    cursorObj.execute('''SELECT pgv.idCita, pc.noId, pc.nombre, pc.apellido, pc.direccion, pc.telefono, pc.correo, pgv.fechaProgramada, pgv.horaProgramada, lv.noLote, lv.fabricante  FROM programacion_vacunas pgv 
+                        INNER JOIN pacientes pc ON (pc.noid = pgv.noid) 
+                        INNER JOIN lote_vacunas lv ON (lv.noLote = pgv.noLote)
+                        ORDER BY {} ASC'''.format(datoConsulta))
+    citasProgramadas = cursorObj.fetchall()
+    for cita in citasProgramadas:
+        cont = 0
+        for dato in cita:
+            infoCita = ""
+            if cont == 1: infoCita = "No. Identificación: "
+            elif cont == 2: infoCita = "Nombre: "
+            elif cont == 3: infoCita = "Apellido: "
+            elif cont == 4: infoCita = "Dirección: "
+            elif cont == 5: infoCita = "Telefono: "
+            elif cont == 6: infoCita = "Correo: "
+            elif cont == 7: infoCita = "Fecha programada: "
+            elif cont == 8: infoCita = "Hora programada: "
+            elif cont == 9: infoCita = "Numero de lote de vacuna: "
+            else: infoCita = "Fabricante de la vacuna: "
+            if dato != None and dato != 0:
+                print(infoCita,dato)
+                cont += 1
+        print('\n')
+
+def consultarProgramacionIndividual(): #Función para programar la vacunación de un usuario individual
+    con = sqlConnection()
+    cursorObj = con.cursor()
+    documentoID = int(input('Ingrese a continuacion el documento de identidad de la persona cuya cita desea consultar:\n'))
+    cursorObj.execute('''SELECT pc.noId, pc.nombre, pc.apellido, pc.direccion, pc.telefono, pc.correo, pgv.fechaProgramada, pgv.horaProgramada, lv.noLote, lv.fabricante  FROM programacion_vacunas pgv 
+                        INNER JOIN pacientes pc ON (pc.noid = pgv.noid) 
+                        INNER JOIN lote_vacunas lv ON (lv.noLote = pgv.noLote)
+                        WHERE pgv.noId = {}'''.format(documentoID))
+    resultado = cursorObj.fetchone()
+    print('\n')
+    if resultado != None:
+        cont = 0
+        for datos in resultado:
+            infoCita = ""
+            if cont == 0: infoCita = "No. Identificación: "
+            elif cont == 1: infoCita = "Nombre: "
+            elif cont == 2: infoCita = "Apellido: "
+            elif cont == 3: infoCita = "Dirección: "
+            elif cont == 4: infoCita = "Telefono: "
+            elif cont == 5: infoCita = "Correo: "
+            elif cont == 6: infoCita = "Fecha programada: "
+            elif cont == 7: infoCita = "Hora programada: "
+            elif cont == 8: infoCita = "Numero de lote de vacuna: "
+            else: infoCita = "Fabricante de la vacuna: "
+            if datos != None:
+                print(infoCita,datos)
+                cont += 1
+        print('\n')
+    else: print('El paciente no tiene cita.\n')
+
+    con.close()
+    
+
+    con.close()
+
+def menuModuloCinco(): #Función para generar un menú de opciones para confirmar la vacunación de un paciente
     while True:
         opcion = input('Desea vacunar pacientes?:\n1. Si\n2. No\n')
         if opcion != '': 
@@ -435,26 +563,35 @@ def menuModuloCinco():
             if (opcion == 2): break
         else: continue
 
-def vacunacionPacientes():
+def vacunacionPacientes(): #Función para cambiar estado de vacunación de un usuario si cumple con los requisitos
     con = sqlConnection()
     cursorObj = con.cursor()
     documentoID = int(input('Ingrese a continuacion el documento de identidad de la persona que desea vacunar:\n'))
-    cursorObj.execute('SELECT fechaDesafiliacion FROM pacientes WHERE noId = {}'.format(documentoID))
-    afiliado = cursorObj.fetchall()
+    cursorObj.execute('SELECT fechaDesafiliacion, vacunado FROM pacientes WHERE noId = {}'.format(documentoID))
+    afiliado = cursorObj.fetchone()
     print('\n')
-    if len(afiliado) != 0:
-        if afiliado[0][0] != None:
+    if afiliado != None:
+        if afiliado[0] != None:
             print('Este paciente se encuentra desafiliado')
+        elif afiliado[1] == 'S':
+            print('Este paciente ya se encuentra vacunado')
         else:
-            vacunado = input('¿Esta persona ha sido vacunada? (S/N):\n').title()
-            cursorObj.execute('UPDATE pacientes SET vacunado = "{}" WHERE noId = {}'.format(vacunado, documentoID))
-            cursorObj.execute('UPDATE lote_vacunas SET cantidadUsada = cantidadUsada + 1 WHERE noLote = (SELECT noLote FROM programacion_vacunas WHERE noId = {})'.format(documentoID))
-            con.commit()
+            cursorObj.execute('''SELECT pc.fechaDesafiliacion , pc.vacunado FROM programacion_vacunas pgv 
+                            INNER JOIN pacientes pc ON (pc.noid = pgv.noid)
+                            WHERE pc.noId = {}'''.format(documentoID))
+            cita = cursorObj.fetchone()
+            if cita != None: 
+                vacunado = input('¿Desea vacunar a esta persona? (S/N):\n').title()
+                if vacunado == 'S':
+                    cursorObj.execute('UPDATE pacientes SET vacunado = "{}" WHERE noId = {}'.format(vacunado, documentoID))
+                    cursorObj.execute('UPDATE lote_vacunas SET cantidadUsada = cantidadUsada + 1 WHERE noLote = (SELECT noLote FROM programacion_vacunas WHERE noId = {})'.format(documentoID))
+                    con.commit()
+            else: print('El paciente no tiene cita programada.\n')
     else: print('El paciente no se encuentra en los registros.\n')
 
     con.close()
 
-def menuPrincipal():
+def menuPrincipal(): # Función para generar un menú principal con las opciones de las funcionalidades del programa
     while True:
         opcion = input('Seleccione el modulo al que desea ingresar:\n1. Afiliados\n2. Lotes\n3. Planes de vacunacion\n4. Programacion de vacunacion\n5. Vacunar\n6. Salir\n')
         if opcion != '': 
@@ -465,10 +602,21 @@ def menuPrincipal():
             if (opcion == 4): menuModuloCuatro()
             if (opcion == 5): menuModuloCinco()
             if (opcion == 6): break
+            if (opcion == 231): reinciarValores()
         else: continue
 
-def main():
+def main(): # Función principal del programa, inicia las funciones basicas
     crearTablas()
     menuPrincipal()
-    
+
+def reinciarValores(): # Función para reiniciar valores de los pacientes y usos o asignaciones de vacunas
+    con = sqlConnection()
+    cursorObj = con.cursor()
+    cursorObj.execute('UPDATE pacientes SET vacunado = "N", fechaDesafiliacion= NULL')
+    cursorObj.execute('UPDATE lote_vacunas SET cantidadUsada = 0, cantidadAsignada = 0')
+    con.commit()
+
+    con.close()
+
+#Se llama a la función principal del programa    
 main()
